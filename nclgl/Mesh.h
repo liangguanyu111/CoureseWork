@@ -85,6 +85,7 @@ public:
 	
 	//Tutorial 1
 	static Mesh* GenerateTriagnle();
+	static Mesh* GenerateQuad();
 
 protected:
 	void	BufferData();

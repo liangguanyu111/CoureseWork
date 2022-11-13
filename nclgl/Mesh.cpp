@@ -444,3 +444,38 @@ Mesh* Mesh::GenerateTriagnle()
 	mesh->BufferData();
 	return mesh;
 }
+Mesh* Mesh::GenerateQuad()
+{
+
+	Mesh* mesh = new Mesh();
+
+	mesh->numVertices = 4;
+
+	mesh->type = GL_TRIANGLE_STRIP;
+
+	mesh -> vertices = new Vector3[mesh-> numVertices];
+    mesh -> textureCoords = new Vector2[mesh-> numVertices];
+	mesh -> colours = new Vector4[mesh-> numVertices];
+
+
+
+	mesh->vertices[0] = Vector3(-1.0f, 1.0f, 0.0f);
+	mesh->vertices[1] = Vector3(-1.0f, -1.0f, 0.0f);
+	mesh->vertices[2] = Vector3(1.0f, 1.0f, 0.0f);
+	mesh->vertices[3] = Vector3(1.0f, -1.0f, 0.0f);
+
+	mesh->colours[0] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	mesh->colours[1] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	mesh->colours[2] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	mesh->colours[3] = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//Texture Since Tutorial
+
+	mesh->textureCoords[0] = Vector2(0.0f, 1.0f);
+	mesh->textureCoords[1] = Vector2(0.0f, 0.0f);
+	mesh->textureCoords[2] = Vector2(1.0f, 1.0f);
+	mesh->textureCoords[3] = Vector2(1.0f, 0.0f);
+
+	mesh->BufferData();
+	return mesh;
+
+}
