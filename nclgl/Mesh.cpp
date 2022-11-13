@@ -434,6 +434,13 @@ Mesh* Mesh::GenerateTriagnle()
 	mesh->colours[1] = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
 	mesh->colours[2] = Vector4(0.0f, 0.0f, 1.0f, 1.0f);
 
+	//Texture Since Tutorial
+
+	mesh->textureCoords = new Vector2[mesh->numVertices];
+	mesh->textureCoords[0] = Vector2(0.5f, 0.0f);
+	mesh->textureCoords[1] = Vector2(1.0f, 1.0f);
+	mesh->textureCoords[2] = Vector2(0.0f, 1.0f);
+
 	mesh->BufferData();
 	return mesh;
 }
