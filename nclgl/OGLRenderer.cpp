@@ -226,6 +226,24 @@ void OGLRenderer::SetTextureRepeating(GLuint target, bool repeating)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void OGLRenderer::SetShaderLight(const Light& l)
+{
+	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(),"pointLights[0].lightPos"), 1, (float*)&l.GetPosition());
+
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(),"pointLights[0].lightColour"), 1, (float*)&l.GetColour());
+
+	glUniform1f(glGetUniformLocation(currentShader->GetProgram(),"pointLights[0].lightRadius"), l.GetRadius());
+}
+void OGLRenderer::SetShaderLight2(const Light& l)
+{
+	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "pointLights[1].lightPos"), 1, (float*)&l.GetPosition());
+
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "pointLights[1].lightColour"), 1, (float*)&l.GetColour());
+
+	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "pointLights[2].lightRadius"), l.GetRadius());
+}
+
+
 #ifdef OPENGL_DEBUGGING
 void OGLRenderer::DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)	{
 		string sourceName;
