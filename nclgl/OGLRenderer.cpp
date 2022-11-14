@@ -213,6 +213,7 @@ void OGLRenderer::UpdateShaderMatrices()	{
 }
 
 void OGLRenderer::BindShader(Shader*s) {
+	
 	currentShader = s;
 	glUseProgram(s->GetProgram());
 }
