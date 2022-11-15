@@ -30,4 +30,3 @@ private:
 	Vector3 position;
 };
 
-#pragma once

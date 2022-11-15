@@ -34,7 +34,8 @@
     </ClCompile>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="SceneNode.cpp" />
-    <ClCompile Include="..\8) Index Buffers\HeightMap.cpp" />
+    <ClCompile Include="HeightMap.cpp" />
+    <ClCompile Include="Light.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -80,7 +81,8 @@
     </ClInclude>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="SceneNode.h" />
-    <ClInclude Include="..\8) Index Buffers\HeightMap.h" />
+    <ClInclude Include="HeightMap.h" />
+    <ClInclude Include="Light.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

@@ -13,7 +13,7 @@ _-_-_-_-_-_-_-""  ""
 
 */
 #include "OGLRenderer.h"
-#include "Shader.h"
+#include "./Shader.h"
 #include <algorithm>
 
 using std::string;

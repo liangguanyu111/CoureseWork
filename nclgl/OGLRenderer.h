@@ -32,10 +32,10 @@ _-_-_-_-_-_-_-""  ""
 #include "Vector2.h"
 #include "Quaternion.h"
 #include "Matrix4.h"
-#include "Window.h"
-#include "Shader.h"
-#include "Mesh.h"
-#include "../11) Per Fragment Lighting A/Light.h"
+#include "./Window.h"
+#include "./Shader.h"
+#include "./Mesh.h"
+#include "../nclgl/Light.h"
 
 using std::vector;
 
