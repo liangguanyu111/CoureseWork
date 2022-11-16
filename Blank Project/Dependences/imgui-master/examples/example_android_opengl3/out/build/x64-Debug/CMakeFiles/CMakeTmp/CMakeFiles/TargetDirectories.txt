@@ -1,0 +1,3 @@
+C:/Users/c2036507/source/repos/CoureseWork/Blank Project/Dependences/imgui-master/examples/example_android_opengl3/out/build/x64-Debug/CMakeFiles/CMakeTmp/CMakeFiles/rebuild_cache.dir
+C:/Users/c2036507/source/repos/CoureseWork/Blank Project/Dependences/imgui-master/examples/example_android_opengl3/out/build/x64-Debug/CMakeFiles/CMakeTmp/CMakeFiles/cmTC_1918a.dir
+C:/Users/c2036507/source/repos/CoureseWork/Blank Project/Dependences/imgui-master/examples/example_android_opengl3/out/build/x64-Debug/CMakeFiles/CMakeTmp/CMakeFiles/edit_cache.dir

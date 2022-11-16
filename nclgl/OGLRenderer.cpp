@@ -228,19 +228,19 @@ void OGLRenderer::SetTextureRepeating(GLuint target, bool repeating)
 
 void OGLRenderer::SetShaderLight(const Light& l)
 {
-	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(),"pointLights[0].lightPos"), 1, (float*)&l.GetPosition());
+	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(),"lightPos"), 1, (float*)&l.GetPosition());
 
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(),"pointLights[0].lightColour"), 1, (float*)&l.GetColour());
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(),"lightColour"), 1, (float*)&l.GetColour());
 
-	glUniform1f(glGetUniformLocation(currentShader->GetProgram(),"pointLights[0].lightRadius"), l.GetRadius());
+	glUniform1f(glGetUniformLocation(currentShader->GetProgram(),"lightRadius"), l.GetRadius());
 }
 void OGLRenderer::SetShaderLight2(const Light& l)
 {
-	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "pointLights[1].lightPos"), 1, (float*)&l.GetPosition());
+	glUniform3fv(glGetUniformLocation(currentShader->GetProgram(), "lightPos"), 1, (float*)&l.GetPosition());
 
-	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "pointLights[1].lightColour"), 1, (float*)&l.GetColour());
+	glUniform4fv(glGetUniformLocation(currentShader->GetProgram(), "lightColour"), 1, (float*)&l.GetColour());
 
-	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "pointLights[2].lightRadius"), l.GetRadius());
+	glUniform1f(glGetUniformLocation(currentShader->GetProgram(), "lightRadius"), l.GetRadius());
 }
 
 

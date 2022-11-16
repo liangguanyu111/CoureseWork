@@ -1,17 +1,25 @@
-#include "Renderer.h"
+﻿#include "Renderer.h"
 #include "../nclgl/HeightMap.h"
 #include "../nclgl/Camera.h"
 #include "../nclgl/Light.h"
 const int LIGHT_NUM = 32;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
+	
 	sphere = Mesh::LoadFromMeshFile("Sphere.msh");
 	quad = Mesh::GenerateQuad();
 	heightMap = new HeightMap(TEXTUREDIR"noise.png");
 
 	earthTex = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	earthBump = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-	if (!earthTex || !earthBump)
+
+	cubeMap = SOIL_load_OGL_cubemap(
+		TEXTUREDIR"1.jpg", TEXTUREDIR"2.jpg",
+		TEXTUREDIR"3.jpg", TEXTUREDIR"4.jpg",
+		TEXTUREDIR"5.jpg", TEXTUREDIR"6.jpg",SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
+
+
+	if (!earthTex || !earthBump || !cubeMap)
 	{
 		std::cout << "Texture load failed" << std::endl;
 		return;
@@ -27,28 +35,32 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 		Light& l = pointLights[i];
 		l.SetPosition(Vector3(rand() % (int)heightmapSize.x, 150.0f, rand() % (int)heightmapSize.z));
 		l.SetColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX), 0.5f + (float)(rand() / (float)RAND_MAX),0.5f + (float)(rand() / (float)RAND_MAX), 1));
-		l.SetRadius(250.0f + (rand() % 250));
+		l.SetRadius(500.0f + (rand() % 250));
 	}
 
 	sceneShader = new Shader("bumpvertex.glsl", "bufferFragment.glsl");
 	pointlightShader = new Shader("pointlightVertex.glsl", "pointlightfrag.glsl");
 	combineShader = new Shader("combinevert.glsl", "combinefrag.glsl");
-	if (!sceneShader->LoadSuccess() || !pointlightShader->LoadSuccess() || !combineShader->LoadSuccess()) {
+
+	skyboxShader = new Shader("skyboxVertex.glsl", "skyboxFragment.glsl");
+
+	if (!sceneShader->LoadSuccess() || !pointlightShader->LoadSuccess() || !combineShader->LoadSuccess() || !skyboxShader->LoadSuccess()) {
 		return;
 	}
 
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
+
 	GLenum buffers[2] = {
-	GL_COLOR_ATTACHMENT0 ,
-	GL_COLOR_ATTACHMENT1
+	GL_COLOR_ATTACHMENT0,
+	GL_COLOR_ATTACHMENT1,
 	};
+
 	GenerateScreenTexture(bufferDepthTex, true);
 	GenerateScreenTexture(bufferColourTex);
 	GenerateScreenTexture(bufferNormalTex);
 	GenerateScreenTexture(lightDiffuseTex);
 	GenerateScreenTexture(lightSpecularTex);
-
 
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, bufferColourTex, 0);
@@ -66,7 +78,11 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=GL_FRAMEBUFFER_COMPLETE) {
 		 return;
 	 }
+
+	 
+
 	 glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	 glEnable(GL_DEPTH_TEST);
 	 glEnable(GL_CULL_FACE);
 	 glEnable(GL_BLEND);
@@ -79,7 +95,10 @@ Renderer ::~Renderer(void) {
 	delete sceneShader;
 	delete combineShader;
 	delete pointlightShader;
-	
+	//delete reflectShader;
+	delete skyboxShader;
+	//delete lightShader;
+
 	delete heightMap;
 	delete camera;
 	delete sphere;
@@ -112,14 +131,36 @@ void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 
 void Renderer::UpdateScene(float dt) {
 	 camera -> UpdateCamera(dt);
+	 viewMatrix = camera -> BuildViewMatrix();
 }
 
 
 void Renderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
 	FillBuffers();
 	DrawPointLights();
 	CombineBuffers();
+	DrawSkybox();
+
+}
+
+void Renderer::DrawSkybox() {
+	
+	glDepthMask(GL_FALSE);
+	BindShader(skyboxShader);
+	UpdateShaderMatrices();
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, bufferFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // 写入到默认帧缓冲
+	glBlitFramebuffer(
+		0, 0, 1280,720, 0, 0, 1280, 720, GL_DEPTH_BUFFER_BIT, GL_NEAREST
+	);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	quad -> Draw();
+	glDepthMask(GL_TRUE);
+
 }
 
 void Renderer::FillBuffers() {
@@ -138,7 +179,7 @@ void Renderer::FillBuffers() {
 	viewMatrix = camera -> BuildViewMatrix();
 	projMatrix = Matrix4::Perspective(1.0f, 10000.0f,(float)width / (float)height, 45.0f);
 	UpdateShaderMatrices();
-	 heightMap -> Draw();
+	heightMap -> Draw();
 	 glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

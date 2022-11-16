@@ -19,23 +19,47 @@ protected:
 	// Make a new texture ...
 	void GenerateScreenTexture(GLuint & into, bool depth = false);
 	
-	Shader * sceneShader; // Shader to fill our GBuffers
-	Shader * pointlightShader; // Shader to calculate lighting
-	Shader * combineShader; // shader to stick it all together
+	void DrawHeightmap();
+	void DrawWater();
+	void DrawSkybox();
+
+
+	Shader* sceneShader; // Shader to fill our GBuffers
+	Shader* pointlightShader; // Shader to calculate lighting
+	Shader* combineShader; // shader to stick it all together
 	
+	Shader* lightShader;
+	Shader* reflectShader;
+	Shader* skyboxShader;
+
+
 	GLuint bufferFBO; // FBO for our G- Buffer pass
 	GLuint bufferColourTex; // Albedo goes here
 	GLuint bufferNormalTex; // Normals go here
 	GLuint bufferDepthTex; // Depth goes here
 	
+
 	GLuint pointLightFBO; // FBO for our lighting pass
 	GLuint lightDiffuseTex; // Store diffuse lighting
 	GLuint lightSpecularTex; // Store specular lighting
+
+	GLuint skyboxFBO;
+	GLuint cubeTex;
+
 	HeightMap * heightMap; // Terrain !
 	Light * pointLights; // Array of lighting data
 	Mesh * sphere; // Light volume
 	Mesh * quad; // To draw a full - screen quad
 	Camera * camera; // Our usual camera
+
 	GLuint earthTex;
 	GLuint earthBump;
+	GLuint cubeMap;
+	GLuint waterTex;
+
+
+
+	float waterRotate;
+	float waterCycle;
+
 };
