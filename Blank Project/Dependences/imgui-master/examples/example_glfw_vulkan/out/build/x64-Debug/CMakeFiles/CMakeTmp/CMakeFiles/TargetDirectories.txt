@@ -1,3 +1,0 @@
-C:/Users/c2036507/source/repos/CoureseWork/Blank Project/Dependences/imgui-master/examples/example_glfw_vulkan/out/build/x64-Debug/CMakeFiles/CMakeTmp/CMakeFiles/cmTC_38f67.dir
-C:/Users/c2036507/source/repos/CoureseWork/Blank Project/Dependences/imgui-master/examples/example_glfw_vulkan/out/build/x64-Debug/CMakeFiles/CMakeTmp/CMakeFiles/edit_cache.dir
-C:/Users/c2036507/source/repos/CoureseWork/Blank Project/Dependences/imgui-master/examples/example_glfw_vulkan/out/build/x64-Debug/CMakeFiles/CMakeTmp/CMakeFiles/rebuild_cache.dir
