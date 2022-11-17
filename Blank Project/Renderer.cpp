@@ -6,26 +6,21 @@ const int LIGHT_NUM = 32;
 
 Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	
+
+}
+
+void Renderer::Init()
+{
 	sphere = Mesh::LoadFromMeshFile("Sphere.msh");
 	quad = Mesh::GenerateQuad();
 	heightMap = new HeightMap(TEXTUREDIR"noise.png");
 
-	earthTex = SOIL_load_OGL_texture(TEXTUREDIR"Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-	earthBump = SOIL_load_OGL_texture(TEXTUREDIR"Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-
-	cubeMap = SOIL_load_OGL_cubemap(
-		TEXTUREDIR"1.jpg", TEXTUREDIR"2.jpg",
-		TEXTUREDIR"3.jpg", TEXTUREDIR"4.jpg",
-		TEXTUREDIR"5.jpg", TEXTUREDIR"6.jpg",SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
-
-
-	if (!earthTex || !earthBump || !cubeMap)
-	{
-		std::cout << "Texture load failed" << std::endl;
-		return;
-	}
+	earthTex = SOIL_load_OGL_texture(TEXTUREDIR "Barren Reds.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	earthBump = SOIL_load_OGL_texture(TEXTUREDIR "Barren RedsDOT3.JPG", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	SetTextureRepeating(earthTex, true);
 	SetTextureRepeating(earthBump, true);
+
+
 	Vector3 heightmapSize = heightMap->GetHeightMapSize();
 	camera = new Camera(-45.0f, 0.0f, heightmapSize * Vector3(0.5f, 5.0f, 0.5f));
 
@@ -34,7 +29,7 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	for (int i = 0; i < LIGHT_NUM; ++i) {
 		Light& l = pointLights[i];
 		l.SetPosition(Vector3(rand() % (int)heightmapSize.x, 150.0f, rand() % (int)heightmapSize.z));
-		l.SetColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX), 0.5f + (float)(rand() / (float)RAND_MAX),0.5f + (float)(rand() / (float)RAND_MAX), 1));
+		l.SetColour(Vector4(0.5f + (float)(rand() / (float)RAND_MAX), 0.5f + (float)(rand() / (float)RAND_MAX), 0.5f + (float)(rand() / (float)RAND_MAX), 1));
 		l.SetRadius(500.0f + (rand() % 250));
 	}
 
@@ -42,12 +37,13 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	pointlightShader = new Shader("pointlightVertex.glsl", "pointlightfrag.glsl");
 	combineShader = new Shader("combinevert.glsl", "combinefrag.glsl");
 
-	skyboxShader = new Shader("skyboxVertex.glsl", "skyboxFragment.glsl");
 
-	if (!sceneShader->LoadSuccess() || !pointlightShader->LoadSuccess() || !combineShader->LoadSuccess() || !skyboxShader->LoadSuccess()) {
+	if (!sceneShader->LoadSuccess() || !pointlightShader->LoadSuccess() || !combineShader->LoadSuccess())
+	{
 		return;
 	}
 
+#pragma region DefererRendering
 	glGenFramebuffers(1, &bufferFBO);
 	glGenFramebuffers(1, &pointLightFBO);
 
@@ -67,37 +63,33 @@ Renderer::Renderer(Window& parent) : OGLRenderer(parent) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bufferNormalTex, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, bufferDepthTex, 0);
 	glDrawBuffers(2, buffers);
-	 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		 return;
-	 }
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return;
+	}
 
-	 glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
-	 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D, lightDiffuseTex, 0);
-	 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,GL_TEXTURE_2D, lightSpecularTex, 0);
-	 glDrawBuffers(2, buffers);
-	 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=GL_FRAMEBUFFER_COMPLETE) {
-		 return;
-	 }
+	glBindFramebuffer(GL_FRAMEBUFFER, pointLightFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, lightDiffuseTex, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, lightSpecularTex, 0);
+	glDrawBuffers(2, buffers);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		return;
+	}
 
-	 
+#pragma endregion
 
-	 glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	 glEnable(GL_DEPTH_TEST);
-	 glEnable(GL_CULL_FACE);
-	 glEnable(GL_BLEND);
-	 
-	 init = true;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
 
+	init = true;
 }
 
 Renderer ::~Renderer(void) {
 	delete sceneShader;
 	delete combineShader;
 	delete pointlightShader;
-	//delete reflectShader;
-	delete skyboxShader;
-	//delete lightShader;
+
 
 	delete heightMap;
 	delete camera;
@@ -129,39 +121,22 @@ void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 }
 
 
+
 void Renderer::UpdateScene(float dt) {
 	 camera -> UpdateCamera(dt);
-	 viewMatrix = camera -> BuildViewMatrix();
+	 //viewMatrix = camera -> BuildViewMatrix();
 }
+
+
 
 
 void Renderer::RenderScene() {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
 	FillBuffers();
 	DrawPointLights();
 	CombineBuffers();
-	DrawSkybox();
-
 }
 
-void Renderer::DrawSkybox() {
-	
-	glDepthMask(GL_FALSE);
-	BindShader(skyboxShader);
-	UpdateShaderMatrices();
-
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, bufferFBO);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // 写入到默认帧缓冲
-	glBlitFramebuffer(
-		0, 0, 1280,720, 0, 0, 1280, 720, GL_DEPTH_BUFFER_BIT, GL_NEAREST
-	);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	quad -> Draw();
-	glDepthMask(GL_TRUE);
-
-}
 
 void Renderer::FillBuffers() {
 	glBindFramebuffer(GL_FRAMEBUFFER, bufferFBO);

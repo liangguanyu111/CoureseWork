@@ -9,29 +9,23 @@ public:
 	Renderer(Window & parent);
 	~Renderer(void);
 	
-	 void RenderScene() override;
+	void Init();
 	void UpdateScene(float dt) override;
-	
+	void RenderScene();
+
 protected:
+	//DefererRendering part
 	void FillBuffers(); //G- Buffer Fill Render Pass
 	void DrawPointLights(); // Lighting Render Pass
 	void CombineBuffers(); // Combination Render Pass
 	// Make a new texture ...
 	void GenerateScreenTexture(GLuint & into, bool depth = false);
 	
-	void DrawHeightmap();
-	void DrawWater();
-	void DrawSkybox();
-
 
 	Shader* sceneShader; // Shader to fill our GBuffers
 	Shader* pointlightShader; // Shader to calculate lighting
 	Shader* combineShader; // shader to stick it all together
 	
-	Shader* lightShader;
-	Shader* reflectShader;
-	Shader* skyboxShader;
-
 
 	GLuint bufferFBO; // FBO for our G- Buffer pass
 	GLuint bufferColourTex; // Albedo goes here
@@ -43,23 +37,14 @@ protected:
 	GLuint lightDiffuseTex; // Store diffuse lighting
 	GLuint lightSpecularTex; // Store specular lighting
 
-	GLuint skyboxFBO;
-	GLuint cubeTex;
 
 	HeightMap * heightMap; // Terrain !
 	Light * pointLights; // Array of lighting data
 	Mesh * sphere; // Light volume
 	Mesh * quad; // To draw a full - screen quad
 	Camera * camera; // Our usual camera
-
 	GLuint earthTex;
 	GLuint earthBump;
-	GLuint cubeMap;
-	GLuint waterTex;
 
-
-
-	float waterRotate;
-	float waterCycle;
 
 };

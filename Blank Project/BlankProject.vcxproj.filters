@@ -20,6 +20,9 @@
     <ClCompile Include="portral.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SecondRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -27,6 +30,9 @@
     </ClInclude>
     <ClInclude Include="portral.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SecondRenderer.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
