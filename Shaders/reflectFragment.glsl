@@ -34,7 +34,7 @@ void main ( void ) {
 		float shadowZ = texture ( shadowTex , biasCoord.xy ).x ;
 		if( shadowZ < biasCoord.z ) 
 		{
-			fragColour.a = 0.8f;
+			fragColour.a = 0.3f;
 			return;
 		}
 	}

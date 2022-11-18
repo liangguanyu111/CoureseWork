@@ -5,7 +5,7 @@ class Mesh;
 class HeightMap;
 class MeshAnimation;
 class MeshMaterial;
-
+class Tree;
 
 class SecondRenderer : public OGLRenderer {
 public:
@@ -26,7 +26,8 @@ protected:
 	void DrawWater();
 	void DrawSkybox();
 	void DrawAnim();
-	void DrawAnim2();
+	void DrawTree(Tree* tree);
+	void SetTrees();
 	Shader* lightShader;
 	Shader* reflectShader;
 	Shader* skyboxShader;
@@ -66,5 +67,9 @@ protected:
 	int currentFrame;
 	float frameTime;
 	float lightRotateTime; 
+
+
+	vector<Tree*> trees;
+	Tree* tree;
 };
 #pragma once

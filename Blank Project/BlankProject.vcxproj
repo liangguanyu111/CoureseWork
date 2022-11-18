@@ -140,11 +140,13 @@
     <ClCompile Include="portral.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SecondRenderer.cpp" />
+    <ClCompile Include="tree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="portral.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SecondRenderer.h" />
+    <ClInclude Include="tree.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

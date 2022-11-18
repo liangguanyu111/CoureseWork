@@ -4,6 +4,7 @@
 #include "../nclgl/Light.h"
 #include "../nclgl/MeshAnimation.h"
 #include "../nclgl/MeshMaterial.h"
+#include "tree.h"
 
 SecondRenderer::SecondRenderer(Window& parent) : OGLRenderer(parent) 
 {
@@ -19,12 +20,13 @@ void SecondRenderer::Init()
 
 	earthTex = SOIL_load_OGL_texture(TEXTUREDIR"clay_02_dif.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	earthBump = SOIL_load_OGL_texture(TEXTUREDIR"clay_02_nrm.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
-	
 	cubeMap = SOIL_load_OGL_cubemap(
 		TEXTUREDIR"west.jpg", TEXTUREDIR"east.jpg",
 		TEXTUREDIR"up.jpg", TEXTUREDIR"down.jpg",
 		TEXTUREDIR"south.jpg", TEXTUREDIR"north.jpg", SOIL_LOAD_RGB, SOIL_CREATE_NEW_ID, 0);
 
+	tree = new Tree(Vector3(4000.0f, 150.0f, 1500.0f),75,90);
+	SetTrees();
 
 	if (!earthTex || !earthBump || !cubeMap||!waterTex||!grassTex)
 	{
@@ -38,7 +40,7 @@ void SecondRenderer::Init()
 
 	Vector3 heightmapSize = heightMap->GetHeightMapSize();
 	camera = new Camera(-45.0f, 0.0f, heightmapSize * Vector3(0.5f, 5.0f, 0.5f));
-	light = new Light(heightmapSize * Vector3(1.25f, 20.0f, 1.5f), Vector4(1, 1, 1, 1), heightmapSize.x);
+	light = new Light(heightmapSize * Vector3(1.25f, 10.0f, 1.5f), Vector4(1, 1, 1, 1), 2 * heightmapSize.x);
 
 	projMatrix = Matrix4::Perspective(1.0f, 15000.0f, (float)width / (float)height, 45.0f);
 
@@ -48,8 +50,8 @@ void SecondRenderer::Init()
 
 
 	characterShader = new Shader("SkinningVertex.glsl", "Tutorial3Fragment.glsl");
-	//sceneShader = new Shader("shadowscenevert.glsl","shadowscenefrag.glsl");
 	shadowShader = new Shader("shadowVertex.glsl", "shadowFragment.glsl");
+
 
 	if (!reflectShader->LoadSuccess() || !skyboxShader->LoadSuccess() || 
 		!lightShader->LoadSuccess()||!characterShader->LoadSuccess() ||
@@ -70,6 +72,7 @@ void SecondRenderer::Init()
 		GLuint texID = SOIL_load_OGL_texture(path.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y);
 		characterMatTextures.emplace_back(texID);
 	}
+
 
 	glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
@@ -120,6 +123,10 @@ SecondRenderer ::~SecondRenderer(void)
 	delete sceneShader;
 	delete shadowShader;
 
+	delete tree;
+	for (auto tree : trees) {
+		delete tree;
+	}
 }
 
 
@@ -142,15 +149,16 @@ void SecondRenderer::UpdateScene(float dt) {
 void SecondRenderer::RenderScene()
 {
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-	if (light->GetPosition().y > 0)
-	{
-		light->SetPosition(light->GetPosition() - Vector3(0, lightRotateTime,0));
-	}
 	DrawSkybox();
-	DrawAnim();
+	DrawShadowScene();
+	//DrawTreeShadow(tree);
 	DrawWater();
 	DrawHeightmap();
-	DrawAnim2();
+	DrawAnim();
+	for (auto tree : trees) {
+		DrawTree(tree);
+	}
+
 }
 
 void SecondRenderer::DrawShadowScene()
@@ -159,67 +167,63 @@ void SecondRenderer::DrawShadowScene()
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glViewport(0, 0, 2048, 2048);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	BindShader(shadowShader);
 
-	viewMatrix = Matrix4::BuildViewMatrix(light -> GetPosition(), Vector3(0, 0, 0));
-	projMatrix = Matrix4::Perspective(1, 100, 1, 45);
-	shadowMatrix = projMatrix * viewMatrix; // used later
-
-	modelMatrix = Matrix4::Translation(Vector3(2000.0f, 100.0f, 2000.0f)) * Matrix4::Scale(Vector3(100, 100, 100)) * Matrix4::Rotation(90, Vector3(0, 1, 0));
-	UpdateShaderMatrices();
-	for (int i = 0; i < meshCharacter->GetSubMeshCount(); ++i) {
-		meshCharacter->DrawSubMesh(i);
-	}
-
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	glViewport(0, 0, width, height);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void SecondRenderer::DrawAnim()
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glViewport(0, 0, 2048, 2048);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
-	BindShader(characterShader); 
+	BindShader(characterShader);
 	SetShaderLight(*light);
 
-	viewMatrix = Matrix4::BuildViewMatrix(light -> GetPosition(), Vector3(0, 0, 0));
+	viewMatrix = Matrix4::BuildViewMatrix(light->GetPosition(), Vector3(0, 0, 0));
 	std::cout << light->GetPosition() << std::endl;
-	projMatrix = Matrix4::Perspective(1,8000, 1, 45);
+	projMatrix = Matrix4::Perspective(1, 8000, 1, 45);
 	shadowMatrix = projMatrix * viewMatrix; // used later
 
 	glUniform3fv(glGetUniformLocation(characterShader->GetProgram(), "cameraPos"), 1, (float*)&camera->GetPosition());
-	glUniform1i(glGetUniformLocation(characterShader->GetProgram(),"diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(characterShader->GetProgram(), "diffuseTex"), 0);
 
 	modelMatrix = Matrix4::Translation(Vector3(2000.0f, 100.0f, 2000.0f)) * Matrix4::Scale(Vector3(100, 100, 100)) * Matrix4::Rotation(90, Vector3(0, 1, 0));
 	UpdateShaderMatrices();
 	vector < Matrix4 > frameMatrices;
-	const Matrix4 * invBindPose = meshCharacter -> GetInverseBindPose();
-	const Matrix4 * frameData =  characterAnim -> GetJointData(currentFrame);
-	for (unsigned int i = 0; i < meshCharacter-> GetJointCount(); ++i) {
+	const Matrix4* invBindPose = meshCharacter->GetInverseBindPose();
+	const Matrix4* frameData = characterAnim->GetJointData(currentFrame);
+	for (unsigned int i = 0; i < meshCharacter->GetJointCount(); ++i) {
 		frameMatrices.emplace_back(frameData[i] * invBindPose[i]);
 	}
-	int j = glGetUniformLocation(characterShader -> GetProgram(), "joints");
-	glUniformMatrix4fv(j, frameMatrices.size(), false,(float*)frameMatrices.data());
+	int j = glGetUniformLocation(characterShader->GetProgram(), "joints");
+	glUniformMatrix4fv(j, frameMatrices.size(), false, (float*)frameMatrices.data());
 
-	for (int i = 0; i < meshCharacter-> GetSubMeshCount(); ++i) {
+	for (int i = 0; i < meshCharacter->GetSubMeshCount(); ++i) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, characterMatTextures[i]);
-		meshCharacter-> DrawSubMesh(i);
+		meshCharacter->DrawSubMesh(i);
 	}
+
+	for (auto tree : trees) {
+
+		BindShader(tree->shader);
+		SetShaderLight(*light);
+		glUniform3fv(glGetUniformLocation(tree->shader->GetProgram(), "cameraPos"), 1, (float*)&camera->GetPosition());
+		glUniform1i(glGetUniformLocation(tree->shader->GetProgram(), "diffuseTex"), 0);
+
+		modelMatrix = Matrix4::Translation(tree->GetPosition()) * Matrix4::Scale(tree->GetScale()) * Matrix4::Rotation(tree->GetRotation(), Vector3(0, 1, 0));
+		UpdateShaderMatrices();
+
+		for (int i = 0; i < tree->mesh->GetSubMeshCount(); ++i) {
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, tree->tex);
+			tree->mesh->DrawSubMesh(i);
+		}
+	}
+
 
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glViewport(0, 0, width, height);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);	
-	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 	projMatrix = Matrix4::Perspective(1.0f, 15000.0f, (float)width / (float)height, 45.0f);
 	viewMatrix = camera->BuildViewMatrix();
 }
 
-void SecondRenderer::DrawAnim2()
+
+void SecondRenderer::DrawAnim()
 {
 
 	BindShader(characterShader);
@@ -244,6 +248,36 @@ void SecondRenderer::DrawAnim2()
 		meshCharacter->DrawSubMesh(i);
 	}
 
+
+
+}
+
+
+
+void SecondRenderer::SetTrees()
+{
+	for (int i = 0; i < 15; i++)
+	{
+		Tree* newTree = new Tree(Vector3(rand()%4000+50,150, rand()%4000 + 50),75,90);
+		trees.push_back(newTree);
+	}
+}
+
+void SecondRenderer::DrawTree(Tree* tree)
+{
+	BindShader(tree->shader);
+	SetShaderLight(*light);
+	glUniform3fv(glGetUniformLocation(tree->shader->GetProgram(), "cameraPos"), 1, (float*)&camera->GetPosition());
+	glUniform1i(glGetUniformLocation(tree->shader->GetProgram(), "diffuseTex"), 0);
+
+	modelMatrix = Matrix4::Translation(tree->GetPosition()) * Matrix4::Scale(tree->GetScale()) * Matrix4::Rotation(tree->GetRotation(), Vector3(0, 1, 0));
+	UpdateShaderMatrices();
+
+	for (int i = 0; i <tree->mesh->GetSubMeshCount(); ++i) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tree->tex);
+		tree->mesh->DrawSubMesh(i);
+	}
 }
 
 void SecondRenderer::DrawHeightmap() {
@@ -296,7 +330,6 @@ void SecondRenderer::DrawWater() {
 
 void SecondRenderer::DrawSkybox()
 {
-
 	glDepthMask(GL_FALSE);
 	BindShader(skyboxShader);
 	UpdateShaderMatrices();
@@ -304,4 +337,3 @@ void SecondRenderer::DrawSkybox()
 	glDepthMask(GL_TRUE);
 
 }
-
