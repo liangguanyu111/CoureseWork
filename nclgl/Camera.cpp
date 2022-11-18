@@ -1,6 +1,7 @@
 #include"Camera.h"
 #include"../nclgl/Window.h"
 #include<algorithm>
+#include<cmath>
 
 Camera::Camera(void)
 {
@@ -59,7 +60,20 @@ void Camera::UpdateCamera(float dt)
 		position.y -= speed;
 	}
 
+	if (autoMove)
+	{
+		position += forward * speed *0.1f;
+	}
+	
+	if (autoRotate)
+	{
+		yaw += 0.5f;
+	}
+
 }
+
+
+
 
 Matrix4 Camera::BuildViewMatrix()
 {

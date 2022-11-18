@@ -39,4 +39,5 @@ void main ( void ) {
 		}
 	}
 
+	fragColour.a = 0.9f;
 }

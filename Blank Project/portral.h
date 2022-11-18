@@ -11,6 +11,7 @@ public:
 	Vector3 GetPosition() const { return position; };
 
 protected:
+	GLuint texture;
 	Vector3 position;
 
 };

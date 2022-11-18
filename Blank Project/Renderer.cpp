@@ -124,6 +124,7 @@ void Renderer::GenerateScreenTexture(GLuint& into, bool depth) {
 
 void Renderer::UpdateScene(float dt) {
 	 camera -> UpdateCamera(dt);
+
 	 //viewMatrix = camera -> BuildViewMatrix();
 }
 

@@ -36,6 +36,7 @@
     <ClCompile Include="SceneNode.cpp" />
     <ClCompile Include="HeightMap.cpp" />
     <ClCompile Include="Light.cpp" />
+    <ClCompile Include="CubeRobot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
@@ -83,6 +84,7 @@
     <ClInclude Include="SceneNode.h" />
     <ClInclude Include="HeightMap.h" />
     <ClInclude Include="Light.h" />
+    <ClInclude Include="CubeRobot.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="GLAD">

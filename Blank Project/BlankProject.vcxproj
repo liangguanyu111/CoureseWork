@@ -137,12 +137,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BlankProject.cpp" />
+    <ClCompile Include="Snow.cpp" />
     <ClCompile Include="portral.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="SecondRenderer.cpp" />
     <ClCompile Include="tree.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Snow.h" />
     <ClInclude Include="portral.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="SecondRenderer.h" />

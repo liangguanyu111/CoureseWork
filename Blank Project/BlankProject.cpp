@@ -59,6 +59,16 @@ int main()	{
 			SwitchScene(index);
 			glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 		}
+
+		if (Window::GetKeyboard()->KeyDown(KEYBOARD_2))
+		{
+			secondRenderer.CameraAutoMove();
+		}
+
+		if (Window::GetKeyboard()->KeyDown(KEYBOARD_3))
+		{
+			secondRenderer.CameraAutoRotate();
+		}
 	}
 
 	return 0;

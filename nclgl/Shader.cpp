@@ -118,7 +118,8 @@ void Shader::LinkProgram()	{
 	glGetProgramiv(programID, GL_LINK_STATUS, &programValid);
 }
 
-void	Shader::SetDefaultAttributes()	{
+void Shader::SetDefaultAttributes()
+{
 	glBindAttribLocation(programID, VERTEX_BUFFER,  "position");
 	glBindAttribLocation(programID, COLOUR_BUFFER,  "colour");
 	glBindAttribLocation(programID, NORMAL_BUFFER,  "normal");
@@ -129,7 +130,7 @@ void	Shader::SetDefaultAttributes()	{
 	glBindAttribLocation(programID, WEIGHTINDEX_BUFFER, "jointIndices");
 }
 
-void	Shader::DeleteIDs() {
+void Shader::DeleteIDs() {
 	if (!programID) {
 		return;
 	}

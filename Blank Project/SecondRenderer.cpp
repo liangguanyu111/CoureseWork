@@ -5,7 +5,7 @@
 #include "../nclgl/MeshAnimation.h"
 #include "../nclgl/MeshMaterial.h"
 #include "tree.h"
-
+#include "Snow.h"
 SecondRenderer::SecondRenderer(Window& parent) : OGLRenderer(parent) 
 {
 
@@ -13,6 +13,10 @@ SecondRenderer::SecondRenderer(Window& parent) : OGLRenderer(parent)
 
 void SecondRenderer::Init()
 {
+
+	CubeRobotshader = new Shader("Tutoria6Vertex.glsl", "Tutorial6Fragment.glsl");
+
+
 	quad = Mesh::GenerateQuad();
 	heightMap = new HeightMap(TEXTUREDIR"noise.png");
 
@@ -20,6 +24,7 @@ void SecondRenderer::Init()
 
 	earthTex = SOIL_load_OGL_texture(TEXTUREDIR"clay_02_dif.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	earthBump = SOIL_load_OGL_texture(TEXTUREDIR"clay_02_nrm.jpg", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
+	snowTex = SOIL_load_OGL_texture(TEXTUREDIR"Snow.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_MIPMAPS);
 	cubeMap = SOIL_load_OGL_cubemap(
 		TEXTUREDIR"west.jpg", TEXTUREDIR"east.jpg",
 		TEXTUREDIR"up.jpg", TEXTUREDIR"down.jpg",
@@ -28,7 +33,7 @@ void SecondRenderer::Init()
 	tree = new Tree(Vector3(4000.0f, 150.0f, 1500.0f),75,90);
 	SetTrees();
 
-	if (!earthTex || !earthBump || !cubeMap||!waterTex||!grassTex)
+	if (!earthTex || !earthBump || !cubeMap||!waterTex||!grassTex||!snowTex)
 	{
 		std::cout << "Texture load failed" << std::endl;
 		return;
@@ -37,6 +42,7 @@ void SecondRenderer::Init()
 	SetTextureRepeating(earthTex, true);
 	SetTextureRepeating(earthBump, true);
 	SetTextureRepeating(waterTex, true);
+	SetTextureRepeating(snowTex, true);
 
 	Vector3 heightmapSize = heightMap->GetHeightMapSize();
 	camera = new Camera(-45.0f, 0.0f, heightmapSize * Vector3(0.5f, 5.0f, 0.5f));
@@ -47,21 +53,28 @@ void SecondRenderer::Init()
 	reflectShader = new Shader("reflectVertex.glsl", "reflectFragment.glsl");
 	skyboxShader = new Shader("skyboxVertex.glsl", "skyboxFragment.glsl");
 	lightShader = new Shader("Tutoria12Vertex.glsl", "Tutorial12Fragment.glsl");
-
+	CubeRobotshader = new Shader("Tutoria6Vertex.glsl","Tutorial6Fragment.glsl");
 
 	characterShader = new Shader("SkinningVertex.glsl", "Tutorial3Fragment.glsl");
 	shadowShader = new Shader("shadowVertex.glsl", "shadowFragment.glsl");
 
-
 	if (!reflectShader->LoadSuccess() || !skyboxShader->LoadSuccess() || 
 		!lightShader->LoadSuccess()||!characterShader->LoadSuccess() ||
-		!shadowShader->LoadSuccess())
+		!shadowShader->LoadSuccess()||!CubeRobotshader->LoadSuccess())
 	{
 		return;
 	}
+	cube = Mesh::LoadFromMeshFile("OffsetCubeY.msh");
+
 	meshCharacter = Mesh::LoadFromMeshFile("Role_T.msh");
 	characterAnim = new MeshAnimation("Role_T.anm");
 	characterMaterial = new MeshMaterial("Role_T.mat");
+
+	if (!cube)
+	{
+		std::cout << "mesh_Cube load failed" << std::endl;
+		return;
+	}
 
 	for (int i = 0; i < meshCharacter->GetSubMeshCount(); ++i)
 	{
@@ -73,6 +86,19 @@ void SecondRenderer::Init()
 		characterMatTextures.emplace_back(texID);
 	}
 
+	root = new SceneNode();
+
+	root->SetTransform(Matrix4::Translation(Vector3(1800.0f, 150.0f, 1800.0f)) * Matrix4::Scale(Vector3(2.0f,2.0f,2.0f)));
+
+	root->AddChild(new CubeRobot(cube));
+
+	SnowRoot = new SceneNode();
+
+	SnowRoot->SetTransform(Matrix4::Translation(Vector3(-2000.0f, 150.0f, -2000.0f)));
+	//particles
+	snow = new Snow(100, 100, 1000);
+
+	SnowRoot->AddChild(snow);
 
 	glGenTextures(1, &shadowTex);
 	glBindTexture(GL_TEXTURE_2D, shadowTex);
@@ -122,6 +148,9 @@ SecondRenderer ::~SecondRenderer(void)
 	delete quad;
 	delete sceneShader;
 	delete shadowShader;
+	delete root;
+	delete CubeRobotshader;
+	delete cube;
 
 	delete tree;
 	for (auto tree : trees) {
@@ -134,6 +163,8 @@ SecondRenderer ::~SecondRenderer(void)
 void SecondRenderer::UpdateScene(float dt) {
 	camera->UpdateCamera(dt);
 	viewMatrix = camera->BuildViewMatrix();
+	root->Update(dt);
+	SnowRoot->Update(dt);
 	waterRotate += dt * 2.0f; //2 degrees a second
 	waterCycle += dt * 0.25f; // 10 units a second
 
@@ -142,8 +173,6 @@ void SecondRenderer::UpdateScene(float dt) {
 		 currentFrame = (currentFrame + 1) % characterAnim -> GetFrameCount();
 		 frameTime += 1.0f / characterAnim-> GetFrameRate();
 	}
-
-
 }
 
 void SecondRenderer::RenderScene()
@@ -153,12 +182,24 @@ void SecondRenderer::RenderScene()
 	DrawShadowScene();
 	//DrawTreeShadow(tree);
 	DrawWater();
+	DrawCubeRobot();
+	DrawSnow();
 	DrawHeightmap();
 	DrawAnim();
 	for (auto tree : trees) {
 		DrawTree(tree);
 	}
 
+}
+
+void SecondRenderer::CameraAutoMove()
+{
+	camera->autoMove = !camera->autoMove;
+}
+
+void SecondRenderer::CameraAutoRotate()
+{
+	camera->autoRotate =!camera->autoRotate;
 }
 
 void SecondRenderer::DrawShadowScene()
@@ -337,3 +378,36 @@ void SecondRenderer::DrawSkybox()
 	glDepthMask(GL_TRUE);
 
 }
+
+void SecondRenderer::DrawCubeRobot()
+{
+	BindShader(CubeRobotshader);
+	UpdateShaderMatrices();
+	glUniform1i(glGetUniformLocation(CubeRobotshader->GetProgram(),"diffuseTex"), 1);
+	DrawNode(root,0);
+}
+
+void SecondRenderer::DrawSnow()
+{
+	BindShader(CubeRobotshader);
+	UpdateShaderMatrices();
+	glUniform1i(glGetUniformLocation(CubeRobotshader->GetProgram(), "diffuseTex"), 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D,snowTex);
+	DrawNode(SnowRoot,1);
+}
+
+void  SecondRenderer::DrawNode(SceneNode* n,int useTexuture) {
+	if (n->GetMesh()) {
+		Matrix4 model = n->GetWorldTransform() * Matrix4::Scale(n->GetScale());
+		glUniformMatrix4fv(glGetUniformLocation(CubeRobotshader->GetProgram(), "modelMatrix"), 1, false, model.values);
+		glUniform4fv(glGetUniformLocation(CubeRobotshader->GetProgram(), "nodeColour"), 1, (float*)&n->GetColour());
+		glUniform1i(glGetUniformLocation(CubeRobotshader->GetProgram(), "useTexture"), useTexuture); // Next tutorial ;)
+		n->Draw(*this);
+	}
+	for (vector < SceneNode* >::const_iterator i = n->GetChildIteratorStart(); i != n->GetChildIteratorEnd(); ++i) {
+		DrawNode(*i,useTexuture);
+	}
+}
+
+

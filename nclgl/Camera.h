@@ -6,6 +6,8 @@
 class  Camera
 {
 public:
+	bool autoMove = false;
+	bool autoRotate = false;
 	Camera(void);
 	Camera(float pitch, float yaw, Vector3 position);
 	~Camera(void) {};
@@ -22,6 +24,7 @@ public:
 
 	float GetPitch() const { return pitch; }
 	void SetPitch(const float p) { pitch = p; }
+
 
 
 private:
